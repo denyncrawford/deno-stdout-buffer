@@ -1,13 +1,14 @@
 
-export default class DynamicBuffer {
+export default class DynamicBuffer implements Deno.Reader, Deno.Writer {
   #buf: Uint8Array;
-  #cursor: number = 0;
+  #cursor = 0;
+  #off = 0;
   constructor() {
     this.#buf = new Uint8Array(0);
     return;
   }
   
-  async write (d:Uint8Array) {
+  write (d:Uint8Array) {
     const updateBuf = new Uint8Array(this.#buf.byteLength + d.byteLength);
     this.copyBytes(this.#buf, updateBuf, 0)
     this.copyBytes(d, updateBuf, this.#buf.byteLength)
@@ -15,14 +16,21 @@ export default class DynamicBuffer {
     return Promise.resolve(updateBuf.byteLength);
   }
 
-  async read () {
-    return Promise.resolve(this.#buf);
+  read (p:Uint8Array) {
+    if (this.#buf.byteLength <= this.#off) return Promise.resolve(null)
+    const nread = this.copyBytes(this.#buf.subarray(this.#off), p);
+    this.#off += nread;
+    return Promise.resolve(nread);
   }
 
-  async delete() {
+  readRaw() {
+    return Promise.resolve(this.#buf)
+  }
+
+  delete() {
     if (this.#buf.byteLength === 0) return
     const updateBuf = new Uint8Array(this.#buf.byteLength - 1)
-    let updated = this.#buf.subarray(0, this.#buf.byteLength - 1)
+    const updated = this.#buf.subarray(0, this.#buf.byteLength - 1)
     this.copyBytes(updated, updateBuf)
     this.#buf = updateBuf;
     return Promise.resolve(updateBuf.byteLength);

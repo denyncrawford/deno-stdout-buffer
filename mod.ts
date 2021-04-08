@@ -3,12 +3,16 @@ import Buf from "./buffer.ts";
 
 const buffer = new Buf();
 
+export class CSI {
+  static kClear = "\x1b[1;1H";
+  static kClearScreenDown = "\x1b[0J";
+}
+
 for await (const keypress of readKeypress()) {
   if(keypress.ctrlKey) {
     Deno.exit(0)
   } else if(keypress.key != undefined) {
     const enc = new TextEncoder();
-    //console.log(1,buffer.bytes())
     switch(keypress.key){
       case 'space':
         await buffer.write(enc.encode(` `))
@@ -25,8 +29,12 @@ for await (const keypress of readKeypress()) {
     // console.log(2,buffer.bytes())
 
     //await Deno.copy(buffer, Deno.stdout);
-    console.clear()
-    await Deno.writeAll(Deno.stdout, await buffer.read());    
+
+    const cursorToTop = new TextEncoder().encode(CSI.kClear);
+    const clearDown = new TextEncoder().encode(CSI.kClearScreenDown);
+    Deno.stdout.write(cursorToTop);
+    Deno.stdout.write(clearDown);
+    await Deno.writeAll(Deno.stdout, await buffer.readRaw());    
     //console.log(3,buffer.bytes())
   }
 }
