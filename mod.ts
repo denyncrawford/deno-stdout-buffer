@@ -1,4 +1,5 @@
 import { readKeypress } from "https://deno.land/x/keypress@0.0.7/mod.ts";
+import { hideCursor, showCursor, goTo } from "https://denopkg.com/iamnathanj/cursor@v2.2.0/mod.ts";
 import Buf from "./buffer.ts";
 
 const buffer = new Buf();
@@ -9,6 +10,7 @@ export class CSI {
 }
 
 for await (const keypress of readKeypress()) {
+  await hideCursor()
   if(keypress.ctrlKey) {
     Deno.exit(0)
   } else if(keypress.key != undefined) {
@@ -21,6 +23,7 @@ for await (const keypress of readKeypress()) {
         await buffer.write(enc.encode(`\n`))
         break;
       case 'backspace':
+        await hideCursor()
         await buffer.delete()  
         break;
       default:
@@ -35,6 +38,7 @@ for await (const keypress of readKeypress()) {
     Deno.stdout.write(cursorToTop);
     Deno.stdout.write(clearDown);
     await Deno.writeAll(Deno.stdout, await buffer.readRaw());    
+    await showCursor()
     //console.log(3,buffer.bytes())
   }
 }
