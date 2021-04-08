@@ -16,18 +16,29 @@ const cursorBlink = () => setInterval(async () => {
   }, 500)
 }, 1000)  
 
+await showCursor()
 let blink = cursorBlink();
+const cursorToTop = new TextEncoder().encode(CSI.kClear);
+const clearDown = new TextEncoder().encode(CSI.kClearScreenDown);
+Deno.stdout.write(cursorToTop);
+Deno.stdout.write(clearDown);
 
 for await (const keypress of readKeypress()) {
   await hideCursor()
   clearInterval(blink)
-  if(keypress.ctrlKey) {
+  if(keypress.ctrlKey && keypress.key === 'c') {
     Deno.exit(0)
-  } else if(keypress.key != undefined) {
+  } else if(keypress.ctrlKey && keypress.key === 's') {
+    console.log('Saved!')
+    Deno.exit(0)
+   }else if(keypress.key != undefined) {
     const enc = new TextEncoder();
     switch(keypress.key){
       case 'space':
         await buffer.write(enc.encode(` `))
+        break;
+      case 'tab':
+        await buffer.write(enc.encode(`  `))//buffer.write(enc.encode(`\t`))
         break;
       case 'return':
         await buffer.write(enc.encode(`\n`))
@@ -35,20 +46,17 @@ for await (const keypress of readKeypress()) {
       case 'backspace':
         await buffer.delete()  
         break;
+      case 'left':
+        console.log('Saved!')
+        Deno.exit(0)
+        break
       default:
         await buffer.write(enc.encode(keypress.key))
     }
-    // console.log(2,buffer.bytes())
-
-    //await Deno.copy(buffer, Deno.stdout);
-
-    const cursorToTop = new TextEncoder().encode(CSI.kClear);
-    const clearDown = new TextEncoder().encode(CSI.kClearScreenDown);
     Deno.stdout.write(cursorToTop);
     Deno.stdout.write(clearDown);
     await Deno.writeAll(Deno.stdout, await buffer.readRaw());    
     await showCursor()
     blink = cursorBlink();
-    //console.log(3,buffer.bytes())
   }
 }
