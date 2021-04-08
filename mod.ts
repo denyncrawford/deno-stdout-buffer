@@ -9,8 +9,18 @@ export class CSI {
   static kClearScreenDown = "\x1b[0J";
 }
 
+const cursorBlink = () => setInterval(async () => {
+  await hideCursor()
+  setTimeout(async () => {
+    await showCursor()
+  }, 500)
+}, 1000)  
+
+let blink = cursorBlink();
+
 for await (const keypress of readKeypress()) {
   await hideCursor()
+  clearInterval(blink)
   if(keypress.ctrlKey) {
     Deno.exit(0)
   } else if(keypress.key != undefined) {
@@ -23,7 +33,6 @@ for await (const keypress of readKeypress()) {
         await buffer.write(enc.encode(`\n`))
         break;
       case 'backspace':
-        await hideCursor()
         await buffer.delete()  
         break;
       default:
@@ -39,6 +48,7 @@ for await (const keypress of readKeypress()) {
     Deno.stdout.write(clearDown);
     await Deno.writeAll(Deno.stdout, await buffer.readRaw());    
     await showCursor()
+    blink = cursorBlink();
     //console.log(3,buffer.bytes())
   }
 }
