@@ -3,7 +3,6 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
   #buf: Uint8Array;
   #cursor = 0;
   #isReadable = true;
-  #operationStatus = true
   #off = 0;
   constructor() {
     this.#buf = new Uint8Array(0);
@@ -11,7 +10,6 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
   }
   
   write (d:Uint8Array) {
-    //this.#cursor = this.#operationStatus ? this.#cursor : this.#cursor + 1;
     const updateBuf = new Uint8Array(this.#buf.byteLength + d.byteLength);
     const chunk1 = this.#buf.subarray(0, this.#cursor)
     const chunk2 = this.#buf.subarray(this.#cursor)
@@ -21,7 +19,6 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
     this.#buf = updateBuf;
     this.#isReadable = true;
     this.#cursor += d.byteLength;
-    this.#operationStatus = true;
     return Promise.resolve(updateBuf.byteLength);
   }
 
@@ -39,7 +36,6 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
 
   delete() {
     if (this.#cursor === 0 ) return
-    //this.#cursor = !this.#operationStatus && (this.#cursor !?? 0)? this.#cursor : this.#cursor - 1
     const updateBuf = new Uint8Array(this.#buf.byteLength - 1)
     const chunk1 = this.#buf.subarray(0, this.#cursor - 1);
     const chunk2 = this.#buf.subarray(this.#cursor);
@@ -47,7 +43,6 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
     if (this.#cursor < this.#buf.byteLength) this.copyBytes(chunk2, updateBuf, this.#cursor - 1)
     this.#buf = updateBuf;
     this.#isReadable = true;
-    this.#operationStatus = false;
     this.#cursor -= 1;
     return Promise.resolve(updateBuf.byteLength);
   }
