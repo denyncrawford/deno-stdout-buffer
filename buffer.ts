@@ -41,28 +41,28 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
     if (this.#cursor === 0 ) return
     //this.#cursor = !this.#operationStatus && (this.#cursor !?? 0)? this.#cursor : this.#cursor - 1
     const updateBuf = new Uint8Array(this.#buf.byteLength - 1)
-    const chunk1 = this.#buf.subarray(0, this.#cursor === this.#buf.byteLength ? this.#cursor - 1 : this.#cursor);
-    const chunk2 = this.#buf.subarray(this.#cursor + 1);
+    const chunk1 = this.#buf.subarray(0, this.#cursor - 1);
+    const chunk2 = this.#buf.subarray(this.#cursor);
     this.copyBytes(chunk1, updateBuf, 0)
-    if (this.#cursor < this.#buf.byteLength) this.copyBytes(chunk2, updateBuf, this.#cursor)
+    if (this.#cursor < this.#buf.byteLength) this.copyBytes(chunk2, updateBuf, this.#cursor - 1)
     this.#buf = updateBuf;
     this.#isReadable = true;
     this.#operationStatus = false;
-     this.#cursor -= 1;
+    this.#cursor -= 1;
     return Promise.resolve(updateBuf.byteLength);
   }
 
   moveCursor(n: number) {
     const cursor = this.#cursor;
-    if (cursor === 0) return Promise.resolve(this.#cursor)
+    if (cursor === 0 && n < 0 || cursor === this.#buf.byteLength && n > 0) return Promise.resolve(this.#cursor)
     this.#cursor = cursor + n;
     return Promise.resolve(this.#cursor)
   }
 
   createCursorPosition(str:string) {
-    let out = str.split('\n').map((e:any) => [...e]);
+    const out = str.split('\n').map((e:string) => [...e]);
     let place = 1;
-    return out.map((arr, row) => arr.map((char, col) => ({ char, row, col, place: place++ }))).flat();
+    return out.map((arr, y) => arr.map((char, x) => ({ char, y, x, place: place++ }))).flat();
   }
   
   getCursorPosition() {

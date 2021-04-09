@@ -72,9 +72,8 @@ for await (const keypress of readKeypress()) {
   }
   // await restore()
   const position = buffer.getCursorPosition()
-  const x = (position?.col || 0) + 2
-  const y = position?.row || 0
-  //console.log(position);
+  const x = (position?.x || 0) + 2
+  const y = position?.y || 0
   
   await goTo(x,y)
   await showCursor()
