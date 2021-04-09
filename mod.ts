@@ -1,5 +1,5 @@
 import { readKeypress } from "https://deno.land/x/keypress@0.0.7/mod.ts";
-import { hideCursor, showCursor, goLeft, goRight, goTo } from "https://denopkg.com/iamnathanj/cursor@v2.2.0/mod.ts";
+import { hideCursor, showCursor, goTo } from "https://denopkg.com/iamnathanj/cursor@v2.2.0/mod.ts";
 import Buf from "./buffer.ts";
 
 const buffer = new Buf();
