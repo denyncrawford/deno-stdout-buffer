@@ -57,7 +57,7 @@ for await (const keypress of readKeypress()) {
         await buffer.write(enc.encode(`\n`))
         break;
       case 'backspace':
-        await buffer.delete()  
+        await buffer.delete() 
         break;
       case 'left':
         console.log('Saved!')
@@ -68,13 +68,13 @@ for await (const keypress of readKeypress()) {
     }
     Deno.stdout.write(cursorToTop);
     Deno.stdout.write(clearDown);
-    await Deno.writeAll(Deno.stdout, await buffer.readRaw());    
+    await Deno.writeAll(Deno.stdout, await buffer.readRaw());
+    //Deno.copy(buffer, Deno.stdout)  
   }
   // await restore()
   const position = buffer.getCursorPosition()
-  const x = (position?.x || 0) + 2
-  const y = position?.y || 0
-  
+  const x = (position?.x || 0);
+  const y = position?.y || 0;
   await goTo(x,y)
   await showCursor()
   blink = cursorBlink();

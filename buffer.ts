@@ -2,11 +2,14 @@
 export default class FileBuffer implements Deno.Reader, Deno.Writer {
   #buf: Uint8Array;
   #cursor = 0;
-  #isReadable = true;
-  #off = 0;
+  #readOffset = 0;
   constructor() {
     this.#buf = new Uint8Array(0);
     return;
+  }
+
+  get cursor() {
+    return this.#cursor
   }
   
   write (d:Uint8Array) {
@@ -17,16 +20,14 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
     this.copyBytes(d, updateBuf, this.#cursor)
     this.copyBytes(chunk2, updateBuf, this.#cursor + 1)
     this.#buf = updateBuf;
-    this.#isReadable = true;
     this.#cursor += d.byteLength;
     return Promise.resolve(updateBuf.byteLength);
   }
 
   read (p:Uint8Array) {
-    if (!this.#isReadable) return Promise.resolve(null) 
-    const nread = this.copyBytes(this.#buf.subarray(this.#off), p);
-    this.#off += nread;
-    if (this.#buf.byteLength <= this.#off) this.#isReadable = false;
+    if (this.#readOffset >= this.#buf.byteLength) return Promise.resolve(null)
+    const nread = this.copyBytes(this.#buf.subarray(this.#readOffset), p);
+    this.#readOffset += nread;
     return Promise.resolve(nread);
   }
 
@@ -42,8 +43,8 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
     this.copyBytes(chunk1, updateBuf, 0)
     if (this.#cursor < this.#buf.byteLength) this.copyBytes(chunk2, updateBuf, this.#cursor - 1)
     this.#buf = updateBuf;
-    this.#isReadable = true;
     this.#cursor -= 1;
+    this.#readOffset -= 1;
     return Promise.resolve(updateBuf.byteLength);
   }
 
@@ -55,9 +56,9 @@ export default class FileBuffer implements Deno.Reader, Deno.Writer {
   }
 
   createCursorPosition(str:string) {
-    const out = str.split('\n').map((e:string) => [...e]);
+    const out = str.split(/(?=\n)/g).map((e:string) => [...e]);
     let place = 1;
-    return out.map((arr, y) => arr.map((char, x) => ({ char, y, x, place: place++ }))).flat();
+    return out.map((arr, y) => arr.map((char, x) => ({ char, y: y+1, x: y === 0 ? x+2 : x + 1, place: place++ }))).flat();
   }
   
   getCursorPosition() {
